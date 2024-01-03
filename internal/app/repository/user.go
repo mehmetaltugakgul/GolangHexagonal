@@ -2,11 +2,22 @@ package repository
 
 import (
 	"golangHexagonal/internal/app/model"
+
 	"gorm.io/gorm"
 )
 
+type IRepository interface {
+	CreateUser(user *model.User) error
+	FindUserByID(id uint) (*model.User, error)
+	UpdateUser(user *model.User) error
+	DeleteUser(id uint) error
+	FindUserByEmail(email string) (*model.User, error)
+	FindUsers() ([]*model.User, error)
+}
+
 type UserRepository struct {
-	db *gorm.DB
+	db          *gorm.DB
+	UserActions IRepository
 }
 
 func NewUserRepository(db *gorm.DB) *UserRepository {

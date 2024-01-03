@@ -1,18 +1,33 @@
-package jwt
+package service
 
 import (
-	"github.com/golang-jwt/jwt/v4"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
-var jwtSecretKey = []byte("your_secret_key")
+var jwtSecretKey = []byte("secret")
+
+type JWTActions interface {
+	GenerateToken(userID uint) (string, error)
+	VerifyToken(tokenString string) (*Claims, error)
+}
+
+type JWTService struct {
+	JWTActions JWTActions
+}
+
+func NewJWTService() *JWTService {
+	return &JWTService{}
+}
 
 type Claims struct {
 	UserID uint `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID uint) (string, error) {
+// GenerateToken implements handler.JWTActions.
+func (*JWTService) GenerateToken(userID uint) (string, error) {
 	expirationTime := time.Now().Add(1 * time.Hour)
 
 	claims := &Claims{
@@ -28,7 +43,8 @@ func GenerateToken(userID uint) (string, error) {
 	return tokenString, err
 }
 
-func VerifyToken(tokenString string) (*Claims, error) {
+// VerifyToken implements handler.JWTActions.
+func (*JWTService) VerifyToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {

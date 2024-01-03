@@ -2,16 +2,17 @@ package service
 
 import (
 	"errors"
-	"golang.org/x/crypto/bcrypt"
 	"golangHexagonal/internal/app/model"
 	"golangHexagonal/internal/app/repository"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
-	repo *repository.UserRepository
+	repo repository.IRepository
 }
 
-func NewUserService(repo *repository.UserRepository) *UserService {
+func NewUserService(repo repository.IRepository) *UserService {
 	return &UserService{repo: repo}
 }
 

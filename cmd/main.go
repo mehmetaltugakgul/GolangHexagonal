@@ -3,13 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gofiber/fiber/v2"
 	"golangHexagonal/internal/app/handler"
 	"golangHexagonal/internal/app/repository"
 	"golangHexagonal/internal/app/service"
 	"golangHexagonal/internal/infrastructure/database"
-	"golangHexagonal/internal/infrastructure/router"
 	"os"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type Config struct {
@@ -50,9 +50,11 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
-	authHandler := handler.NewAuthHandler(userService)
+	jwtService := service.NewJWTService()
+	authHandler := handler.NewAuthHandler(userService, jwtService)
 
-	router.SetupRoutes(app, userHandler, authHandler)
+	userHandler.RegisterRoutes(app)
+	authHandler.RegisterRoutes(app)
 
 	err = app.Listen(":3000")
 	if err != nil {
