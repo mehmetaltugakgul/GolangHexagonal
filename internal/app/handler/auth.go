@@ -1,18 +1,33 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"golangHexagonal/internal/app/model"
 	"golangHexagonal/internal/app/service"
-	"golangHexagonal/pkg/jwt"
+
+	"github.com/gofiber/fiber/v2"
 )
 
-type AuthHandler struct {
-	userService *service.UserService
+type AuthActions interface {
+	AuthenticateUser(email, password string) (*model.User, error)
 }
 
-func NewAuthHandler(userService *service.UserService) *AuthHandler {
-	return &AuthHandler{userService: userService}
+type JWTActions interface {
+	GenerateToken(userID uint) (string, error)
+	VerifyToken(tokenString string) (*service.Claims, error)
+}
+
+type AuthHandler struct {
+	userService AuthActions
+	jwtService  JWTActions
+}
+
+func NewAuthHandler(userService AuthActions, jwtActions JWTActions) *AuthHandler {
+	return &AuthHandler{userService: userService, jwtService: jwtActions}
+}
+
+func (h *AuthHandler) RegisterRoutes(app *fiber.App) {
+	app.Post("/login", h.Login)
+	app.Post("/logout", h.Logout)
 }
 
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
@@ -26,7 +41,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid email or password"})
 	}
 
-	token, err := jwt.GenerateToken(user.ID)
+	token, err := h.jwtService.GenerateToken(user.ID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Could not generate token"})
 	}

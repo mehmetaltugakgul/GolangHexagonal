@@ -1,17 +1,33 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"golangHexagonal/internal/app/model"
-	"golangHexagonal/internal/app/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
-type UserHandler struct {
-	service *service.UserService
+type UserActions interface {
+	CreateUser(user *model.User) error
+	GetUserByID(id uint) (*model.User, error)
+	UpdateUser(user *model.User) error
+	DeleteUser(id uint) error
+	GetUsers() ([]*model.User, error)
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
+type UserHandler struct {
+	service UserActions
+}
+
+func NewUserHandler(service UserActions) *UserHandler {
 	return &UserHandler{service: service}
+}
+
+func (h *UserHandler) RegisterRoutes(app *fiber.App) {
+	app.Post("/users", h.CreateUser)
+	app.Get("/users/:id", h.GetUser)
+	app.Put("/users/:id", h.UpdateUser)
+	app.Delete("/users/:id", h.DeleteUser)
+	app.Get("/users", h.GetUsers)
 }
 
 func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
